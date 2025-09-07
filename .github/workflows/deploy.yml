@@ -42,6 +42,7 @@ jobs:
       - name: Replace Ideris Private Key
         run: |
           replace "IDERIS_PRIVATE_KEY" "${{ secrets.IDERIS_PRIVATE_KEY }}" scripts/app.js
+          replace "IDERIS_PRIVATE_KEY" "${{ secrets.IDERIS_PRIVATE_KEY }}" scripts/verificacao.js
 
       - name: Verify replacements
         run: |
