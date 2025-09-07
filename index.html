@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Atendimentos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/style.css">
+    
+    <!-- Firebase App (o core do Firebase) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- Firebase Storage -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <header id="header" class="hidden">
+        <!-- Cabeçalho mantido igual -->
+    </header>
+    
+    <div class="container">
+        <!-- Página de Login -->
+        <div id="paginaLogin">
+            <!-- Conteúdo mantido igual -->
+        </div>
+        
+        <!-- Página de Dashboard -->
+        <div id="paginaDashboard" class="hidden">
+            <!-- Conteúdo mantido igual -->
+        </div>
+        
+        <!-- Página de Listagem -->
+        <div id="paginaListagem" class="hidden">
+            <!-- Conteúdo mantido igual -->
+        </div>
+        
+        <!-- Página de Formulário -->
+        <div id="paginaFormulario" class="hidden">
+            <!-- Conteúdo mantido igual -->
+        </div>
+        
+        <!-- Página de Detalhes do Chamado -->
+        <div id="paginaDetalhes" class="hidden">
+            <!-- Conteúdo mantido igual -->
+        </div>
+    </div>
+
+    <script src="scripts/firebase-config.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>
