@@ -3,14 +3,7 @@ console.log('✅ estoque.js carregado');
 
 class EstoqueManager {
     constructor() {
-        this.jwtTokenIderis = null;
-        this.renewTimerIderis = null;
-        this.PRIVATE_KEY_IDERIS = "IDERIS_PRIVATE_KEY";
-        this.AUTH_URL_IDERIS = "https://apiv3.ideris.com.br/login";
-        this.BASE_SKU_URL = "https://apiv3.ideris.com.br/sku/search";
-        this.UPDATE_URL = "https://apiv3.ideris.com.br/sku/stock";
-        this.RENEW_MS = (7 * 60 + 48) * 60 * 1000;
-        
+        this.pedidosEstoque = [];
         this.init();
     }
 
@@ -18,10 +11,8 @@ class EstoqueManager {
         console.log('Inicializando EstoqueManager...');
         this.inicializarElementos();
         this.inicializarEventos();
+        this.inicializarAutenticacao();
         this.carregarUltimaPesquisa();
-        
-        // Iniciar autenticação imediatamente
-        this.loginIderis();
     }
 
     inicializarElementos() {
@@ -92,6 +83,33 @@ class EstoqueManager {
         }
     }
 
+    inicializarAutenticacao() {
+        if (!this.statusEstoque) {
+            console.error('Elemento statusEstoque não encontrado');
+            return;
+        }
+        
+        // Usar o sistema centralizado de autenticação
+        window.iderisAuth.onAuth((success, error) => {
+            if (success) {
+                this.setStatusEstoque('Autenticado com sucesso! Pronto para consultar SKUs.', 'sucesso');
+                if (this.btnBuscar) {
+                    this.btnBuscar.disabled = false;
+                }
+            } else if (error) {
+                this.setStatusEstoque('Erro: ' + error, 'erro');
+            }
+        });
+
+        // Se não estiver autenticado, iniciar autenticação
+        if (!window.iderisAuth.isAutenticado()) {
+            this.setStatusEstoque('Autenticando no Hub Ideris...', 'carregando');
+            window.iderisAuth.autenticar().catch(err => {
+                this.setStatusEstoque('Erro na autenticação: ' + err.message, 'erro');
+            });
+        }
+    }
+
     carregarUltimaPesquisa() {
         if (!this.skuInput || !this.lastSearch) return;
         
@@ -102,80 +120,6 @@ class EstoqueManager {
         } else {
             this.lastSearch.textContent = 'Última pesquisa: —';
         }
-    }
-
-    async loginIderis() {
-        if (!this.statusEstoque) {
-            console.error('Elemento statusEstoque não encontrado');
-            return;
-        }
-        
-        console.log('Iniciando autenticação Ideris...');
-        this.setStatusEstoque('Autenticando no Hub Ideris...', 'carregando');
-        
-        try {
-            const resp = await fetch(this.AUTH_URL_IDERIS, {
-                method: 'POST',
-                headers: {
-                    'accept': '*/*',
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.PRIVATE_KEY_IDERIS}`
-                },
-                body: `"${this.PRIVATE_KEY_IDERIS}"`
-            });
-
-            console.log('Resposta da autenticação:', resp.status, resp.statusText);
-
-            const raw = await resp.text();
-            console.log('Resposta bruta:', raw.substring(0, 100) + '...');
-
-            if (!resp.ok) {
-                throw new Error(`Falha na autenticação: ${resp.status} - ${raw}`);
-            }
-
-            let token = null;
-            try {
-                const parsed = JSON.parse(raw);
-                token = typeof parsed === 'string' ? parsed : (parsed.token || parsed.jwt);
-                console.log('Token extraído do JSON:', token ? '✅' : '❌');
-            } catch (parseError) {
-                console.log('Falha no parse JSON, tentando como texto simples...');
-                const cleaned = raw.trim().replace(/^"|"$/g, '');
-                if (/^[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/.test(cleaned)) {
-                    token = cleaned;
-                    console.log('Token extraído como texto simples:', token ? '✅' : '❌');
-                }
-            }
-
-            if (!token) {
-                throw new Error('Token JWT não encontrado na resposta. Resposta: ' + raw.substring(0, 100));
-            }
-
-            this.jwtTokenIderis = token;
-            this.scheduleRenewIderis();
-            this.setStatusEstoque('Autenticado com sucesso! Pronto para consultar SKUs.', 'sucesso');
-            
-            if (this.btnBuscar) {
-                this.btnBuscar.disabled = false;
-                console.log('Botão buscar habilitado');
-            }
-
-            console.log('Autenticação realizada com sucesso');
-
-        } catch (err) {
-            console.error('Erro na autenticação:', err);
-            this.setStatusEstoque('Erro: ' + err.message, 'erro');
-            
-            // Tentar novamente após 5 segundos em caso de erro
-            setTimeout(() => {
-                this.loginIderis();
-            }, 5000);
-        }
-    }
-
-    scheduleRenewIderis() {
-        if (this.renewTimerIderis) clearTimeout(this.renewTimerIderis);
-        this.renewTimerIderis = setTimeout(() => this.loginIderis(), this.RENEW_MS);
     }
 
     setStatusEstoque(mensagem, tipo = '') {
@@ -246,21 +190,17 @@ class EstoqueManager {
         ));
 
         const params = skuList.map(s => `sku=${encodeURIComponent(s)}`).join('&');
-        const url = `${this.BASE_SKU_URL}?${params}`;
+        const url = `https://apiv3.ideris.com.br/sku/search?${params}`;
 
         this.setStatusEstoque('Consultando SKUs...', 'carregando');
         try {
-            const resp = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'accept': 'application/json',
-                    'Authorization': `Bearer ${this.jwtTokenIderis}`
-                }
+            const response = await window.iderisRequest(url, {
+                method: 'GET'
             });
 
-            console.log('Resposta da consulta SKUs:', resp.status);
+            console.log('Resposta da consulta SKUs:', response.status);
 
-            const raw = await resp.text();
+            const raw = await response.text();
             let list = [];
 
             try {
@@ -285,7 +225,7 @@ class EstoqueManager {
                 this.lastSearch.textContent = `Última pesquisa: ${rawInput}`;
             }
 
-            this.setStatusEstoque(resp.ok ? `Consulta concluída. ${list.length} SKU(s) encontrados.` : `Falha na consulta (${resp.status}).`, resp.ok ? 'sucesso' : 'erro');
+            this.setStatusEstoque(response.ok ? `Consulta concluída. ${list.length} SKU(s) encontrados.` : `Falha na consulta (${response.status}).`, response.ok ? 'sucesso' : 'erro');
 
         } catch (err) {
             console.error('Erro na consulta SKUs:', err);
@@ -294,10 +234,14 @@ class EstoqueManager {
     }
 
     async atualizarEstoques() {
-        if (!this.jwtTokenIderis) {
+        if (!window.iderisAuth.isAutenticado()) {
             this.setStatusEstoque('Token inválido. Reautenticando...', 'carregando');
-            await this.loginIderis();
-            if (!this.jwtTokenIderis) return;
+            try {
+                await window.iderisAuth.autenticar();
+            } catch (err) {
+                this.setStatusEstoque('Erro na autenticação: ' + err.message, 'erro');
+                return;
+            }
         }
 
         const rows = this.skuTable ? this.skuTable.querySelectorAll('tbody tr') : [];
@@ -308,6 +252,7 @@ class EstoqueManager {
 
         this.setStatusEstoque('Atualizando estoques...', 'carregando');
         let okCount = 0;
+        let errorCount = 0;
 
         for (const row of rows) {
             const sku = row.cells[0].textContent.trim();
@@ -317,18 +262,23 @@ class EstoqueManager {
             if (val === '' || isNaN(val)) continue;
 
             const payload = { sku, currentStock: parseInt(val, 10) };
+            
+            // Validar estoque negativo
+            if (payload.currentStock < 0) {
+                this.setStatusEstoque('Erro: Estoque não pode ser negativo.', 'erro');
+                continue;
+            }
+
             try {
-                const resp = await fetch(this.UPDATE_URL, {
+                const response = await window.iderisRequest('https://apiv3.ideris.com.br/sku/stock', {
                     method: 'PUT',
                     headers: {
-                        'accept': '*/*',
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${this.jwtTokenIderis}`
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(payload)
                 });
 
-                if (resp.ok) {
+                if (response.ok) {
                     okCount++;
                     // Atualizar exibição
                     const stockCell = row.querySelector('.stock-total');
@@ -338,33 +288,66 @@ class EstoqueManager {
                     }
                     if (input) input.value = '';
                 } else {
-                    const errorText = await resp.text();
-                    console.error(`Falha ao atualizar ${sku}: ${resp.status} - ${errorText}`);
+                    errorCount++;
+                    const errorText = await response.text();
+                    console.error(`Falha ao atualizar ${sku}: ${response.status} - ${errorText}`);
                 }
             } catch (err) {
+                errorCount++;
                 console.error(`Erro ao atualizar ${sku}:`, err);
             }
         }
 
-        this.setStatusEstoque(`${okCount} SKU(s) atualizados com sucesso.`, okCount > 0 ? 'sucesso' : 'erro');
+        if (okCount > 0) {
+            this.setStatusEstoque(`${okCount} SKU(s) atualizados com sucesso.${errorCount > 0 ? ` ${errorCount} erro(s).` : ''}`, 'sucesso');
+        } else {
+            this.setStatusEstoque('Nenhum SKU atualizado. Verifique os dados.', 'erro');
+        }
     }
 
     voltarDashboard() {
-        const dashboard = document.getElementById('paginaDashboard');
-        if (dashboard) {
-            // Esconder todas as páginas
-            document.querySelectorAll('[id^="pagina"]').forEach(pagina => {
-                pagina.classList.add('hidden');
-            });
-            // Mostrar dashboard
-            dashboard.classList.remove('hidden');
+        // Usar o sistema de navegação global
+        if (typeof window.mostrarPagina === 'function') {
+            window.mostrarPagina(document.getElementById('paginaDashboard'));
+        } else {
+            // Fallback: esconder todas as páginas e mostrar dashboard
+            const paginas = document.querySelectorAll('[id^="pagina"]');
+            paginas.forEach(pagina => pagina.classList.add('hidden'));
+            
+            const dashboard = document.getElementById('paginaDashboard');
+            if (dashboard) dashboard.classList.remove('hidden');
         }
+    }
+
+    // Método para forçar autenticação (pode ser chamado externamente)
+    forcarAutenticacao() {
+        this.setStatusEstoque('Autenticando no Hub Ideris...', 'carregando');
+        window.iderisAuth.autenticar().then(() => {
+            this.setStatusEstoque('Autenticado com sucesso!', 'sucesso');
+        }).catch(err => {
+            this.setStatusEstoque('Erro: ' + err.message, 'erro');
+        });
     }
 }
 
-// Inicializar quando a página de estoque for carregada
+// Função de inicialização para estoque
 function inicializarEstoque() {
     console.log('Inicializando módulo de estoque...');
+    
+    // Verificar se a autenticação global está disponível
+    if (typeof window.iderisAuth === 'undefined') {
+        console.error('Sistema de autenticação Ideris não encontrado');
+        
+        // Tentar carregar o script de autenticação
+        const script = document.createElement('script');
+        script.src = './scripts/ideris-auth.js';
+        script.onload = () => {
+            window.estoqueApp = new EstoqueManager();
+        };
+        document.head.appendChild(script);
+        return;
+    }
+    
     window.estoqueApp = new EstoqueManager();
 }
 
@@ -376,5 +359,47 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Exportar função para inicialização manual
+// Inicializar quando a página for aberta via menu
+function mostrarPaginaEstoque() {
+    console.log('Mostrando página de estoque...');
+    
+    // Usar navegação global se disponível
+    if (typeof window.mostrarPagina === 'function') {
+        window.mostrarPagina(document.getElementById('paginaEstoque'));
+    } else {
+        // Fallback: esconder todas as páginas e mostrar estoque
+        const paginas = document.querySelectorAll('[id^="pagina"]');
+        paginas.forEach(pagina => pagina.classList.add('hidden'));
+        
+        const paginaEstoque = document.getElementById('paginaEstoque');
+        if (paginaEstoque) paginaEstoque.classList.remove('hidden');
+    }
+    
+    // Inicializar se ainda não foi
+    if (typeof window.estoqueApp === 'undefined') {
+        setTimeout(inicializarEstoque, 100);
+    } else if (window.estoqueApp && !window.iderisAuth.isAutenticado()) {
+        // Forçar reautenticação se necessário
+        window.estoqueApp.forcarAutenticacao();
+    }
+}
+
+// Exportar funções para uso global
 window.inicializarEstoque = inicializarEstoque;
+window.mostrarPaginaEstoque = mostrarPaginaEstoque;
+
+// Interface para outros scripts acessarem o estoque
+window.estoqueManager = {
+    inicializar: inicializarEstoque,
+    mostrar: mostrarPaginaEstoque,
+    buscarSKUs: function() {
+        if (window.estoqueApp) {
+            window.estoqueApp.buscarSKUs();
+        }
+    },
+    atualizarEstoques: function() {
+        if (window.estoqueApp) {
+            window.estoqueApp.atualizarEstoques();
+        }
+    }
+};
