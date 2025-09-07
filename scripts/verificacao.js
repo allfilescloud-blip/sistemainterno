@@ -3,32 +3,42 @@
 let jwtTokenIderis = null;
 let renewTimerIderis = null;
 let pedidosVerificados = [];
-const PRIVATE_KEY_IDERIS = "IDERIS_PRIVATE_KEY"; // Será substituído pelo GitHub Actions
+const PRIVATE_KEY_IDERIS = "IDERIS_PRIVATE_KEY";
 const AUTH_URL_IDERIS = "https://apiv3.ideris.com.br/login";
 const RENEW_MS = (7 * 60 + 48) * 60 * 1000;
 
 // Elementos da verificação
-const paginaVerificacao = document.getElementById('paginaVerificacao');
-const btnVoltarVerificacao = document.getElementById('btnVoltarVerificacao');
-const pedidoVerificacao = document.getElementById('pedidoVerificacao');
-const btnBuscarVerificacao = document.getElementById('btnBuscarVerificacao');
-const statusVerificacao = document.getElementById('statusVerificacao');
-const resultadoVerificacao = document.getElementById('resultadoVerificacao');
-const listaLidosVerificacao = document.getElementById('listaLidosVerificacao');
+let paginaVerificacao, btnVoltarVerificacao, pedidoVerificacao, btnBuscarVerificacao, statusVerificacao, resultadoVerificacao, listaLidosVerificacao;
 
 // Menu Ferramentas
-const btnNavFerramentas = document.getElementById('btnNavFerramentas');
-const submenuFerramentas = document.getElementById('submenuFerramentas');
+let btnNavFerramentas, submenuFerramentas;
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
+    inicializarElementos();
     inicializarMenuFerramentas();
     inicializarVerificacao();
 });
 
+// Obter elementos do DOM
+function inicializarElementos() {
+    paginaVerificacao = document.getElementById('paginaVerificacao');
+    btnVoltarVerificacao = document.getElementById('btnVoltarVerificacao');
+    pedidoVerificacao = document.getElementById('pedidoVerificacao');
+    btnBuscarVerificacao = document.getElementById('btnBuscarVerificacao');
+    statusVerificacao = document.getElementById('statusVerificacao');
+    resultadoVerificacao = document.getElementById('resultadoVerificacao');
+    listaLidosVerificacao = document.getElementById('listaLidosVerificacao');
+    btnNavFerramentas = document.getElementById('btnNavFerramentas');
+    submenuFerramentas = document.getElementById('submenuFerramentas');
+}
+
 // Comportamento do menu Ferramentas
 function inicializarMenuFerramentas() {
-    if (!btnNavFerramentas) return;
+    if (!btnNavFerramentas) {
+        console.error('Botão Ferramentas não encontrado');
+        return;
+    }
     
     btnNavFerramentas.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -37,18 +47,22 @@ function inicializarMenuFerramentas() {
 
     // Fechar submenu ao clicar fora
     document.addEventListener('click', function() {
-        submenuFerramentas.classList.remove('show');
+        if (submenuFerramentas) {
+            submenuFerramentas.classList.remove('show');
+        }
     });
 
     // Prevenir que clicks dentro do submenu fechem ele
-    submenuFerramentas.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
+    if (submenuFerramentas) {
+        submenuFerramentas.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
 
     // Navegação para a página de verificação
     document.querySelectorAll('.submenu-item[data-page="verificacao"]').forEach(item => {
         item.addEventListener('click', function() {
-            mostrarPagina(paginaVerificacao);
+            mostrarPaginaVerificacao();
             // Iniciar autenticação quando abrir a página
             if (!jwtTokenIderis) {
                 loginIderisVerificacao();
@@ -59,18 +73,53 @@ function inicializarMenuFerramentas() {
     // Para a opção Estoque (placeholder)
     document.querySelectorAll('.submenu-item[data-page="estoque"]').forEach(item => {
         item.addEventListener('click', function() {
-            showToast('Módulo de Estoque em desenvolvimento', 'info');
+            if (typeof showToast === 'function') {
+                showToast('Módulo de Estoque em desenvolvimento', 'info');
+            } else {
+                alert('Módulo de Estoque em desenvolvimento');
+            }
         });
     });
 }
 
+// Função para mostrar página de verificação (alternativa à mostrarPagina)
+function mostrarPaginaVerificacao() {
+    // Esconder todas as páginas
+    const paginas = document.querySelectorAll('#paginaDashboard, #paginaListagem, #paginaFormulario, #paginaDetalhes, #paginaVerificacao');
+    paginas.forEach(pagina => {
+        if (pagina) pagina.classList.add('hidden');
+    });
+    
+    // Mostrar apenas a página de verificação
+    if (paginaVerificacao) {
+        paginaVerificacao.classList.remove('hidden');
+    }
+    
+    // Atualizar navegação
+    const navButtons = document.querySelectorAll('.nav-btn');
+    navButtons.forEach(btn => btn.classList.remove('active'));
+    
+    if (btnNavFerramentas) {
+        btnNavFerramentas.classList.add('active');
+    }
+}
+
 // Inicialização da verificação
 function inicializarVerificacao() {
-    if (!btnVoltarVerificacao) return;
+    if (!btnVoltarVerificacao) {
+        console.error('Botão voltar verificação não encontrado');
+        return;
+    }
     
     // Voltar da página de verificação
     btnVoltarVerificacao.addEventListener('click', function() {
-        mostrarPagina(paginaDashboard);
+        if (typeof mostrarPagina === 'function') {
+            mostrarPagina(document.getElementById('paginaDashboard'));
+        } else {
+            mostrarPaginaVerificacao();
+            // Alternativa: recarregar a página principal
+            window.location.href = window.location.href.split('#')[0];
+        }
     });
 
     // Event Listeners para verificação
@@ -87,17 +136,22 @@ function inicializarVerificacao() {
         });
 
         // Foco automático ao entrar na página
-        paginaVerificacao.addEventListener('mostrar', function() {
-            setTimeout(() => {
-                pedidoVerificacao.focus();
-            }, 100);
-        });
+        if (paginaVerificacao) {
+            paginaVerificacao.addEventListener('DOMNodeInserted', function() {
+                setTimeout(() => {
+                    if (pedidoVerificacao) pedidoVerificacao.focus();
+                }, 100);
+            });
+        }
     }
 }
 
 // Função para autenticar na API Ideris
 async function loginIderisVerificacao() {
-    if (!statusVerificacao) return;
+    if (!statusVerificacao) {
+        console.error('Elemento statusVerificacao não encontrado');
+        return;
+    }
     
     setStatusVerificacao("Autenticando no Hub Ideris...", 'carregando');
     try {
@@ -222,10 +276,14 @@ async function buscarPedidoVerificacao() {
         }
 
         if (resultadoVerificacao) {
+            const codigoEl = resultadoVerificacao.querySelector(".codigo-verificacao");
             const statusEl = resultadoVerificacao.querySelector(".statusDesc-verificacao");
-            resultadoVerificacao.querySelector(".codigo-verificacao").textContent = codigo;
-            statusEl.textContent = statusDescription;
-            statusEl.className = "statusDesc-verificacao" + (statusDescription === "Pagamento cancelado" ? " cancelado" : "");
+            
+            if (codigoEl) codigoEl.textContent = codigo;
+            if (statusEl) {
+                statusEl.textContent = statusDescription;
+                statusEl.className = "statusDesc-verificacao" + (statusDescription === "Pagamento cancelado" ? " cancelado" : "");
+            }
         }
 
         atualizarListaVerificacao(codigo, statusDescription, deliveryCode);
@@ -239,9 +297,3 @@ async function buscarPedidoVerificacao() {
         pedidoVerificacao.focus();
     }
 }
-
-// Exportar funções para uso global
-window.verificacao = {
-    loginIderisVerificacao,
-    buscarPedidoVerificacao
-};
