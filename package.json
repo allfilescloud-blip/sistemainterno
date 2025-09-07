@@ -1,0 +1,11 @@
+{
+  "name": "sistema-atendimentos",
+  "version": "1.0.0",
+  "description": "Sistema de gerenciamento de chamados",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
