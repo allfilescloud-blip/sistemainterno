@@ -43,6 +43,7 @@ jobs:
         run: |
           replace "IDERIS_PRIVATE_KEY" "${{ secrets.IDERIS_PRIVATE_KEY }}" scripts/app.js
           replace "IDERIS_PRIVATE_KEY" "${{ secrets.IDERIS_PRIVATE_KEY }}" scripts/verificacao.js
+          replace "IDERIS_PRIVATE_KEY" "${{ secrets.IDERIS_PRIVATE_KEY }}" scripts/estoque.js
 
       - name: Verify replacements
         run: |
