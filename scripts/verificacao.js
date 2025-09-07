@@ -1,24 +1,22 @@
 // scripts/verificacao.js
+console.log('✅ verificacao.js carregado');
+
 class VerificacaoPedidos {
     constructor() {
-        this.jwtTokenIderis = null;
-        this.renewTimerIderis = null;
         this.pedidosVerificados = [];
-        this.PRIVATE_KEY_IDERIS = "IDERIS_PRIVATE_KEY";
-        this.AUTH_URL_IDERIS = "https://apiv3.ideris.com.br/login";
-        this.RENEW_MS = (7 * 60 + 48) * 60 * 1000;
-        
         this.init();
     }
 
     init() {
+        console.log('Inicializando VerificacaoPedidos...');
         this.inicializarElementos();
-        this.inicializarMenuFerramentas();
-        this.inicializarVerificacao();
+        this.inicializarEventos();
+        this.inicializarAutenticacao();
     }
 
     inicializarElementos() {
-        // Usaremos querySelector para maior flexibilidade
+        console.log('Buscando elementos de verificação...');
+        
         this.paginaVerificacao = document.getElementById('paginaVerificacao');
         this.btnVoltarVerificacao = document.getElementById('btnVoltarVerificacao');
         this.pedidoVerificacao = document.getElementById('pedidoVerificacao');
@@ -26,113 +24,11 @@ class VerificacaoPedidos {
         this.statusVerificacao = document.getElementById('statusVerificacao');
         this.resultadoVerificacao = document.getElementById('resultadoVerificacao');
         this.listaLidosVerificacao = document.getElementById('listaLidosVerificacao');
-        this.btnNavFerramentas = document.getElementById('btnNavFerramentas');
-        this.submenuFerramentas = document.getElementById('submenuFerramentas');
-
-        console.log('Elementos de verificação inicializados:', {
-            paginaVerificacao: !!this.paginaVerificacao,
-            btnVoltarVerificacao: !!this.btnVoltarVerificacao,
-            pedidoVerificacao: !!this.pedidoVerificacao,
-            btnBuscarVerificacao: !!this.btnBuscarVerificacao,
-            statusVerificacao: !!this.statusVerificacao,
-            resultadoVerificacao: !!this.resultadoVerificacao,
-            listaLidosVerificacao: !!this.listaLidosVerificacao
-        });
     }
 
-    inicializarMenuFerramentas() {
-        if (!this.btnNavFerramentas) {
-            console.log('Botão Ferramentas não encontrado, tentando novamente...');
-            setTimeout(() => this.inicializarMenuFerramentas(), 100);
-            return;
-        }
-
-        this.btnNavFerramentas.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.submenuFerramentas.classList.toggle('show');
-        });
-
-        document.addEventListener('click', () => {
-            if (this.submenuFerramentas) {
-                this.submenuFerramentas.classList.remove('show');
-            }
-        });
-
-        document.querySelectorAll('.submenu-item[data-page="estoque"]').forEach(item => {
-            item.addEventListener('click', () => {
-                this.mostrarEstoque();
-            });
-        });
-
-        if (this.submenuFerramentas) {
-            this.submenuFerramentas.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-        }
-
-        // Navegação para verificação
-        document.querySelectorAll('.submenu-item[data-page="verificacao"]').forEach(item => {
-            item.addEventListener('click', () => {
-                this.mostrarPaginaVerificacao();
-                if (!this.jwtTokenIderis) {
-                    this.loginIderisVerificacao();
-                }
-            });
-        });
-
-        // Opção estoque
-        document.querySelectorAll('.submenu-item[data-page="estoque"]').forEach(item => {
-            item.addEventListener('click', () => {
-                this.mostrarToast('Módulo de Estoque em desenvolvimento', 'info');
-            });
-        });
-    }
-
-    mostrarPaginaVerificacao() {
-        console.log('Mostrando página de verificação...');
+    inicializarEventos() {
+        console.log('Inicializando eventos de verificação...');
         
-        // Esconder todas as páginas principais
-        const paginas = [
-            'paginaLogin', 'paginaDashboard', 'paginaListagem', 
-            'paginaFormulario', 'paginaDetalhes', 'paginaVerificacao'
-        ];
-        
-        paginas.forEach(id => {
-            const pagina = document.getElementById(id);
-            if (pagina) pagina.classList.add('hidden');
-        });
-
-        // Mostrar página de verificação
-        if (this.paginaVerificacao) {
-            this.paginaVerificacao.classList.remove('hidden');
-            console.log('Página de verificação mostrada');
-        } else {
-            console.error('Página de verificação não encontrada');
-        }
-
-        // Atualizar navegação
-        const navButtons = document.querySelectorAll('.nav-btn');
-        navButtons.forEach(btn => btn.classList.remove('active'));
-        
-        if (this.btnNavFerramentas) {
-            this.btnNavFerramentas.classList.add('active');
-        }
-
-        // Focar no campo de entrada
-        setTimeout(() => {
-            if (this.pedidoVerificacao) {
-                this.pedidoVerificacao.focus();
-            }
-        }, 100);
-    }
-
-    inicializarVerificacao() {
-        if (this.btnVoltarVerificacao) {
-            this.btnVoltarVerificacao.addEventListener('click', () => {
-                this.voltarParaDashboard();
-            });
-        }
-
         if (this.btnBuscarVerificacao) {
             this.btnBuscarVerificacao.addEventListener('click', () => {
                 this.buscarPedidoVerificacao();
@@ -147,98 +43,36 @@ class VerificacaoPedidos {
                 }
             });
         }
-    }
 
-    // Adicionar método para mostrar estoque
-    mostrarEstoque() {
-        console.log('Mostrando página de estoque...');
-        
-        // Esconder todas as páginas
-        const paginas = document.querySelectorAll('#paginaDashboard, #paginaListagem, #paginaFormulario, #paginaDetalhes, #paginaLogin, #paginaVerificacao');
-        paginas.forEach(pagina => {
-            if (pagina) pagina.classList.add('hidden');
-        });
-    
-        // Mostrar estoque
-        const paginaEstoque = document.getElementById('paginaEstoque');
-        if (paginaEstoque) {
-            paginaEstoque.classList.remove('hidden');
-            console.log('✅ Página de estoque mostrada');
-            
-            // Inicializar estoque se ainda não foi
-            if (typeof window.estoqueApp === 'undefined') {
-                window.estoqueApp = new EstoqueManager();
-            }
-        } else {
-            console.error('❌ Página de estoque não encontrada');
-        }
-    }
-    
-    voltarParaDashboard() {
-        const paginaDashboard = document.getElementById('paginaDashboard');
-        if (paginaDashboard) {
-            // Esconder todas as páginas
-            document.querySelectorAll('[id^="pagina"]').forEach(pagina => {
-                pagina.classList.add('hidden');
+        if (this.btnVoltarVerificacao) {
+            this.btnVoltarVerificacao.addEventListener('click', () => {
+                this.voltarDashboard();
             });
-            // Mostrar dashboard
-            paginaDashboard.classList.remove('hidden');
-            
-            // Atualizar navegação
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.getElementById('btnNavDashboard').classList.add('active');
         }
     }
 
-    async loginIderisVerificacao() {
+    inicializarAutenticacao() {
         if (!this.statusVerificacao) return;
         
-        this.setStatusVerificacao("Autenticando no Hub Ideris...", 'carregando');
-        try {
-            const resp = await fetch(this.AUTH_URL_IDERIS, {
-                method: "POST",
-                headers: {
-                    "accept": "*/*",
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${this.PRIVATE_KEY_IDERIS}`
-                },
-                body: `"${this.PRIVATE_KEY_IDERIS}"`
-            });
-
-            const raw = await resp.text();
-            if (!resp.ok) throw new Error(`Falha na autenticação: ${resp.status} - ${raw}`);
-
-            let token = null;
-            try {
-                const parsed = JSON.parse(raw);
-                token = typeof parsed === "string" ? parsed : (parsed.token || parsed.jwt);
-            } catch {
-                const cleaned = raw.trim().replace(/^"|"$/g, "");
-                if (/^[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/.test(cleaned)) {
-                    token = cleaned;
+        // Usar o sistema centralizado de autenticação
+        window.iderisAuth.onAuth((success, error) => {
+            if (success) {
+                this.setStatusVerificacao('Autenticado com sucesso! Pronto para consultas.', 'sucesso');
+                if (this.btnBuscarVerificacao) {
+                    this.btnBuscarVerificacao.disabled = false;
                 }
+            } else if (error) {
+                this.setStatusVerificacao('Erro: ' + error, 'erro');
             }
+        });
 
-            if (!token) throw new Error("Token JWT não encontrado na resposta.");
-
-            this.jwtTokenIderis = token;
-            this.scheduleRenewIderis();
-            this.setStatusVerificacao("Autenticado com sucesso! Pronto para consultas.", 'sucesso');
-            
-            if (this.btnBuscarVerificacao) this.btnBuscarVerificacao.disabled = false;
-            if (this.pedidoVerificacao) this.pedidoVerificacao.focus();
-
-        } catch (err) {
-            this.setStatusVerificacao("Erro: " + err.message, 'erro');
-            console.error(err);
+        // Se não estiver autenticado, iniciar autenticação
+        if (!window.iderisAuth.isAutenticado()) {
+            this.setStatusVerificacao('Autenticando no Hub Ideris...', 'carregando');
+            window.iderisAuth.autenticar().catch(err => {
+                this.setStatusVerificacao('Erro na autenticação: ' + err.message, 'erro');
+            });
         }
-    }
-
-    scheduleRenewIderis() {
-        if (this.renewTimerIderis) clearTimeout(this.renewTimerIderis);
-        this.renewTimerIderis = setTimeout(() => this.loginIderisVerificacao(), this.RENEW_MS);
     }
 
     setStatusVerificacao(mensagem, tipo = '') {
@@ -257,62 +91,51 @@ class VerificacaoPedidos {
         
         const codigo = this.pedidoVerificacao.value.trim();
         if (!codigo) {
-            this.setStatusVerificacao("Informe o código do pedido.", 'erro');
+            this.setStatusVerificacao('Informe o código do pedido.', 'erro');
             this.pedidoVerificacao.focus();
             return;
         }
 
-        if (!this.jwtTokenIderis) {
-            this.setStatusVerificacao("Token JWT inválido. Tentando autenticar novamente...", 'carregando');
-            await this.loginIderisVerificacao();
-            if (!this.jwtTokenIderis) return;
-        }
-
         this.setStatusVerificacao(`Consultando pedido ${codigo}...`, 'carregando');
+        
         try {
             const url = `https://apiv3.ideris.com.br/order/${encodeURIComponent(codigo)}`;
-            const resp = await fetch(url, {
-                method: "GET",
-                headers: {
-                    "accept": "application/json",
-                    "Authorization": `Bearer ${this.jwtTokenIderis}`
-                }
-            });
-
-            const raw = await resp.text();
-            let statusDescription = "—";
-            let deliveryCode = "—";
+            const response = await window.iderisRequest(url, { method: 'GET' });
+            
+            const raw = await response.text();
+            let statusDescription = '—';
+            let deliveryCode = '—';
             
             try {
                 const parsed = JSON.parse(raw);
                 if (parsed && parsed.obj) {
-                    statusDescription = parsed.obj.statusDescription || "—";
-                    deliveryCode = parsed.obj.deliveryCode || "—";
+                    statusDescription = parsed.obj.statusDescription || '—';
+                    deliveryCode = parsed.obj.deliveryCode || '—';
                 }
             } catch {
-                statusDescription = "Resposta inválida";
+                statusDescription = 'Resposta inválida';
             }
 
             if (this.resultadoVerificacao) {
-                const codigoEl = this.resultadoVerificacao.querySelector(".codigo-verificacao");
-                const statusEl = this.resultadoVerificacao.querySelector(".statusDesc-verificacao");
+                const codigoEl = this.resultadoVerificacao.querySelector('.codigo-verificacao');
+                const statusEl = this.resultadoVerificacao.querySelector('.statusDesc-verificacao');
                 
                 if (codigoEl) codigoEl.textContent = codigo;
                 if (statusEl) {
                     statusEl.textContent = statusDescription;
-                    statusEl.className = "statusDesc-verificacao" + 
-                        (statusDescription === "Pagamento cancelado" ? " cancelado" : "");
+                    statusEl.className = 'statusDesc-verificacao' + 
+                        (statusDescription === 'Pagamento cancelado' ? ' cancelado' : '');
                 }
             }
 
             this.atualizarListaVerificacao(codigo, statusDescription, deliveryCode);
-            this.setStatusVerificacao(resp.ok ? "Consulta realizada com sucesso." : `Falha na consulta (${resp.status}).`, resp.ok ? 'sucesso' : 'erro');
+            this.setStatusVerificacao(response.ok ? 'Consulta realizada com sucesso.' : `Falha na consulta (${response.status}).`, response.ok ? 'sucesso' : 'erro');
             
-            this.pedidoVerificacao.value = "";
+            this.pedidoVerificacao.value = '';
             this.pedidoVerificacao.focus();
 
         } catch (err) {
-            this.setStatusVerificacao("Erro: " + err.message, 'erro');
+            this.setStatusVerificacao('Erro: ' + err.message, 'erro');
             this.pedidoVerificacao.focus();
         }
     }
@@ -325,11 +148,11 @@ class VerificacaoPedidos {
 
         this.pedidosVerificados.push({ codigo, status, deliveryCode });
 
-        const li = document.createElement("li");
+        const li = document.createElement('li');
         if (duplicadoDelivery) {
-            li.className = "duplicado-delivery";
+            li.className = 'duplicado-delivery';
         } else if (duplicadoCodigo) {
-            li.className = "duplicado";
+            li.className = 'duplicado';
         }
 
         li.innerHTML = `
@@ -337,22 +160,48 @@ class VerificacaoPedidos {
                 <strong>${codigo}</strong>
                 <span class="delivery-verificacao">${deliveryCode ? `(${deliveryCode})` : ''}</span>
             </span>
-            <span class="status-verificacao${status === "Pagamento cancelado" ? " cancelado" : ""}">${status}</span>
+            <span class="status-verificacao${status === 'Pagamento cancelado' ? ' cancelado' : ''}">${status}</span>
         `;
         this.listaLidosVerificacao.insertBefore(li, this.listaLidosVerificacao.firstChild);
     }
 
-    mostrarToast(mensagem, tipo = 'info') {
-        if (typeof showToast === 'function') {
-            showToast(mensagem, tipo);
-        } else {
-            console.log(`${tipo.toUpperCase()}: ${mensagem}`);
-        }
+    voltarDashboard() {
+        this.esconderTodasPaginas();
+        const dashboard = document.getElementById('paginaDashboard');
+        if (dashboard) dashboard.classList.remove('hidden');
+    }
+
+    esconderTodasPaginas() {
+        const paginas = document.querySelectorAll('[id^="pagina"]');
+        paginas.forEach(pagina => pagina.classList.add('hidden'));
     }
 }
 
-// Inicializar quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', function() {
+// Sistema de navegação global
+window.navegacao = {
+    mostrarPagina(id) {
+        // Esconder todas as páginas
+        const paginas = document.querySelectorAll('[id^="pagina"]');
+        paginas.forEach(pagina => pagina.classList.add('hidden'));
+        
+        // Mostrar página solicitada
+        const pagina = document.getElementById(id);
+        if (pagina) pagina.classList.remove('hidden');
+        
+        console.log('Navegado para:', id);
+    }
+};
+
+// Inicializar quando a página de verificação for carregada
+function inicializarVerificacao() {
+    console.log('Inicializando módulo de verificação...');
     window.verificacaoApp = new VerificacaoPedidos();
-    console.log('Sistema de verificação inicializado');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('paginaVerificacao')) {
+        inicializarVerificacao();
+    }
 });
+
+window.inicializarVerificacao = inicializarVerificacao;
