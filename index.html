@@ -471,6 +471,52 @@
             </div>
         </div>
         <!-- FIM DA PÁGINA DE VERIFICAÇÃO -->
+        <!-- Página de Estoque -->
+        <div id="paginaEstoque" class="hidden">
+            <button id="btnVoltarEstoque" class="btn voltar">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </button>
+            
+            <div class="form-container">
+                <h2>Consulta e Atualização de SKUs - Hub Ideris</h2>
+                
+                <div class="form-group">
+                    <label for="skuInputEstoque">SKUs para consulta:</label>
+                    <input type="text" id="skuInputEstoque" placeholder="Digite SKUs separados por vírgula (ex.: 38,46,50)" />
+                </div>
+                
+                <div class="row-botoes-estoque">
+                    <button id="btnBuscarEstoque" class="btn" disabled>
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                    <button id="btnLimparEstoque" class="btn">
+                        <i class="fas fa-trash"></i> Limpar Lista
+                    </button>
+                    <button id="btnAtualizarEstoque" class="btn">
+                        <i class="fas fa-sync"></i> Atualizar Estoques
+                    </button>
+                </div>
+                
+                <div class="hint-estoque" id="lastSearchEstoque">Última pesquisa: —</div>
+                
+                <div class="status-estoque-container" id="statusEstoque">
+                    Aguardando autenticação...
+                </div>
+        
+                <div class="tabela-estoque-wrap">
+                    <table id="skuTableEstoque" aria-label="Lista de SKUs">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Estoque Atual</th>
+                                <th>Atualizar</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts com caminhos relativos -->
