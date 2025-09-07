@@ -154,7 +154,7 @@ class VerificacaoPedidos {
         console.log('Mostrando página de estoque...');
         
         // Esconder todas as páginas
-        const paginas = document.querySelectorAll('paginaDashboard, paginaListagem, #paginaFormulario, #paginaDetalhes, #paginaLogin, #paginaVerificacao');
+        const paginas = document.querySelectorAll('#paginaDashboard, #paginaListagem, #paginaFormulario, #paginaDetalhes, #paginaLogin, #paginaVerificacao');
         paginas.forEach(pagina => {
             if (pagina) pagina.classList.add('hidden');
         });
