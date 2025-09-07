@@ -58,6 +58,12 @@ class VerificacaoPedidos {
             }
         });
 
+        document.querySelectorAll('.submenu-item[data-page="estoque"]').forEach(item => {
+            item.addEventListener('click', () => {
+                this.mostrarEstoque();
+            });
+        });
+
         if (this.submenuFerramentas) {
             this.submenuFerramentas.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -80,6 +86,31 @@ class VerificacaoPedidos {
                 this.mostrarToast('Módulo de Estoque em desenvolvimento', 'info');
             });
         });
+    }
+
+    // Adicionar método para mostrar estoque
+    mostrarEstoque() {
+        console.log('Mostrando página de estoque...');
+        
+        // Esconder todas as páginas
+        const paginas = document.querySelectorAll('#paginaDashboard, #paginaListagem, #paginaFormulario, #paginaDetalhes, #paginaLogin, #paginaVerificacao');
+        paginas.forEach(pagina => {
+            if (pagina) pagina.classList.add('hidden');
+        });
+    
+        // Mostrar estoque
+        const paginaEstoque = document.getElementById('paginaEstoque');
+        if (paginaEstoque) {
+            paginaEstoque.classList.remove('hidden');
+            console.log('✅ Página de estoque mostrada');
+            
+            // Inicializar estoque se ainda não foi
+            if (typeof window.estoqueApp === 'undefined') {
+                window.estoqueApp = new EstoqueManager();
+            }
+        } else {
+            console.error('❌ Página de estoque não encontrada');
+        }
     }
 
     mostrarPaginaVerificacao() {
