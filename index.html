@@ -6,6 +6,8 @@
     <title>Sistema de Atendimentos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./styles/style.css">
+    <link rel="stylesheet" href="./styles/submenu.css">
+    <link rel="stylesheet" href="./styles/verificacao.css">
     
     <!-- Firebase App (o core do Firebase) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -33,6 +35,19 @@
                     <button id="btnNavListagem" class="nav-btn">
                         <i class="fas fa-list"></i> Chamados
                     </button>
+                    <div class="nav-menu-item">
+                        <button id="btnNavFerramentas" class="nav-btn">
+                            <i class="fas fa-tools"></i> Ferramentas
+                        </button>
+                        <div class="submenu hidden" id="submenuFerramentas">
+                            <div class="submenu-item" data-page="verificacao">
+                                <i class="fas fa-check-circle"></i> Verificação
+                            </div>
+                            <div class="submenu-item" data-page="estoque">
+                                <i class="fas fa-box"></i> Estoque
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -425,6 +440,7 @@
     <!-- Scripts com caminhos relativos -->
     <script src="./scripts/firebase-config.js"></script>
     <script src="./scripts/app.js"></script>
+    <script src="./scripts/verificacao.js"></script>
 
     <!-- Script de verificação de carregamento -->
     <script>
