@@ -297,3 +297,7 @@ async function buscarPedidoVerificacao() {
         pedidoVerificacao.focus();
     }
 }
+
+// Exportar funções para uso global
+window.mostrarPagina = mostrarPagina;
+window.showToast = showToast;
