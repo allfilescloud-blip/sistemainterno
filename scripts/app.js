@@ -140,16 +140,26 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Função para alternar entre páginas
-function mostrarPagina(pagina) {
+// No início do arquivo, adicionar:
+window.mostrarPagina = function(pagina) {
     // Esconder todas as páginas
-    paginaDashboard.classList.add('hidden');
-    paginaListagem.classList.add('hidden');
-    paginaFormulario.classList.add('hidden');
-    paginaDetalhes.classList.add('hidden');
+    const paginas = document.querySelectorAll('#paginaLogin, #paginaDashboard, #paginaListagem, #paginaFormulario, #paginaDetalhes, #paginaVerificacao, #paginaEstoque');
+    paginas.forEach(p => p.classList.add('hidden'));
+    
+    // Mostrar página solicitada
+    pagina.classList.remove('hidden');
+};
+
+// Função para alternar entre páginas
+//function mostrarPagina(pagina) {
+    // Esconder todas as páginas
+    //paginaDashboard.classList.add('hidden');
+    //paginaListagem.classList.add('hidden');
+    //paginaFormulario.classList.add('hidden');
+    //paginaDetalhes.classList.add('hidden');
     
     // Mostrar apenas a página solicitada
-    pagina.classList.remove('hidden');
+    //pagina.classList.remove('hidden');
     
     // Atualizar navegação
     const navButtons = document.querySelectorAll('.nav-btn');
