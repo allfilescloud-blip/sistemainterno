@@ -1603,3 +1603,7 @@ setInterval(() => {
         loadTotals();
     }
 }, 5*60*1000);
+
+// Exportar funções para uso global
+window.mostrarPagina = mostrarPagina;
+window.showToast = showToast;
