@@ -1,5 +1,4 @@
 /* styles/submenu.css */
-/* Estilos para o menu Ferramentas e submenu */
 .nav-menu {
     display: flex;
     gap: 5px;
@@ -52,4 +51,11 @@
 /* Manter submenu visível quando hover no item pai */
 .nav-menu-item:hover .submenu {
     display: block;
+}
+
+/* Estilo para o botão Ferramentas quando ativo */
+.nav-btn.active {
+    background: white;
+    color: #3b82f6;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
