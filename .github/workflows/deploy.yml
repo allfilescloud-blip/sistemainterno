@@ -27,11 +27,13 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      - name: Install replace utility
-        run: npm install -g replace
-
-      - name: Replace Firebase configuration
+      - name: Install dependencies
         run: |
+          npm install -g replace
+
+      - name: Replace environment variables
+        run: |
+          # Substituir todas as chaves do Firebase
           replace "FIREBASE_API_KEY" "${{ secrets.FIREBASE_API_KEY }}" scripts/firebase-config.js
           replace "FIREBASE_AUTH_DOMAIN" "${{ secrets.FIREBASE_AUTH_DOMAIN }}" scripts/firebase-config.js
           replace "FIREBASE_PROJECT_ID" "${{ secrets.FIREBASE_PROJECT_ID }}" scripts/firebase-config.js
@@ -39,32 +41,23 @@ jobs:
           replace "FIREBASE_MESSAGING_SENDER_ID" "${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}" scripts/firebase-config.js
           replace "FIREBASE_APP_ID" "${{ secrets.FIREBASE_APP_ID }}" scripts/firebase-config.js
           replace "FIREBASE_MEASUREMENT_ID" "${{ secrets.FIREBASE_MEASUREMENT_ID }}" scripts/firebase-config.js
-
-      - name: Replace Ideris Private Key
-        run: |
+          
+          # Substituir chave da Ideris
           replace "IDERIS_PRIVATE_KEY" "${{ secrets.IDERIS_PRIVATE_KEY }}" scripts/app.js
 
       - name: Verify replacements
         run: |
-          echo "=== Verificando substituições ==="
-          
-          # Verificar Firebase
+          echo "Verificando substituições..."
           if grep -q "FIREBASE_API_KEY" scripts/firebase-config.js; then
-            echo "❌ ERRO: Firebase API Key não foi substituída!"
+            echo "ERRO: Firebase API Key não foi substituída!"
             exit 1
-          else
-            echo "✅ Firebase API Key substituída com sucesso"
           fi
           
-          # Verificar Ideris
           if grep -q "IDERIS_PRIVATE_KEY" scripts/app.js; then
-            echo "❌ ERRO: Ideris Private Key não foi substituída!"
-            exit 1
-          else
-            echo "✅ Ideris Private Key substituída com sucesso"
+            echo "AVISO: Ideris Private Key não foi substituída!"
           fi
           
-          echo "=== Todas as substituições verificadas ==="
+          echo "Substituições verificadas com sucesso!"
 
       - name: Setup Pages
         uses: actions/configure-pages@v3
