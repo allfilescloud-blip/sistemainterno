@@ -1,8 +1,131 @@
 /* styles/verificacao.css */
-/* Estilos para a página de verificação */
-.resultado-verificacao {
-    margin-top: 20px;
+/* Container principal da página de verificação */
+#paginaVerificacao {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 20px;
+}
+
+/* Ajustes para o container do formulário */
+#paginaVerificacao .form-container {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    padding: 30px;
+    border: 1px solid #e2e8f0;
+    margin-top: 20px;
+}
+
+/* Cabeçalho da página */
+#paginaVerificacao h2 {
+    font-size: 24px;
+    color: #1e293b;
+    margin-bottom: 24px;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Grupo do formulário */
+#paginaVerificacao .form-group {
+    margin-bottom: 20px;
+}
+
+#paginaVerificacao .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #475569;
+    font-size: 14px;
+}
+
+#paginaVerificacao .form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 15px;
+    transition: border-color 0.2s;
+}
+
+#paginaVerificacao .form-group input:focus {
+    border-color: #3b82f6;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Botão de busca */
+#paginaVerificacao .btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+}
+
+#paginaVerificacao .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+}
+
+#paginaVerificacao .btn:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Botão voltar */
+#paginaVerificacao .btn.voltar {
+    background: #cbd5e1;
+    margin-bottom: 20px;
+}
+
+#paginaVerificacao .btn.voltar:hover {
+    background: #94a3b8;
+}
+
+/* Status da verificação */
+.status-verificacao-container {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.status-verificacao-container.carregando {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border-color: #93c5fd;
+}
+
+.status-verificacao-container.erro {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border-color: #fca5a5;
+}
+
+.status-verificacao-container.sucesso {
+    background-color: #d1fae5;
+    color: #065f46;
+    border-color: #6ee7b7;
+}
+
+/* Resultado da verificação */
+.resultado-verificacao {
+    margin-top: 24px;
+    padding: 24px;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
@@ -14,41 +137,43 @@
     font-size: 24px;
     font-weight: bold;
     color: #1e293b;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
 .statusDesc-verificacao {
     font-size: 18px;
     font-weight: 600;
-    margin-top: 8px;
-    padding: 8px 16px;
+    margin-top: 12px;
+    padding: 10px 20px;
     border-radius: 20px;
     display: inline-block;
 }
 
 .statusDesc-verificacao:not(.cancelado) {
-    background-color: #10b981;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
 }
 
 .statusDesc-verificacao.cancelado {
-    background-color: #ef4444;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     color: white;
 }
 
+/* Lista de pedidos verificados */
 .lista-verificacao {
-    margin-top: 30px;
+    margin-top: 32px;
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border-radius: 10px;
-    padding: 20px;
+    padding: 24px;
     border: 1px solid #e2e8f0;
 }
 
 .lista-verificacao h3 {
     font-size: 18px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     color: #334155;
     font-weight: 600;
+    text-align: center;
 }
 
 .lista-verificacao ul {
@@ -58,20 +183,20 @@
 }
 
 .lista-verificacao li {
-    padding: 12px 16px;
+    padding: 16px 20px;
     border-bottom: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: #ffffff;
     border-radius: 8px;
-    margin-bottom: 8px;
-    transition: transform 0.2s;
+    margin-bottom: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .lista-verificacao li:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .lista-verificacao .duplicado {
@@ -86,18 +211,20 @@
 
 .lista-verificacao .status-verificacao {
     font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 12px;
+    padding: 6px 14px;
+    border-radius: 14px;
     font-size: 14px;
+    min-width: 120px;
+    text-align: center;
 }
 
 .lista-verificacao .status-verificacao:not(.cancelado) {
-    background-color: #10b981;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
 }
 
 .lista-verificacao .status-verificacao.cancelado {
-    background-color: #ef4444;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     color: white;
 }
 
@@ -108,29 +235,53 @@
     font-style: italic;
 }
 
-/* Status da verificação */
-.status-verificacao-container {
-    margin: 15px 0;
-    padding: 12px;
-    border-radius: 8px;
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    text-align: center;
-    font-size: 14px;
-    color: #64748b;
+/* Responsividade */
+@media (max-width: 768px) {
+    #paginaVerificacao {
+        padding: 15px;
+    }
+    
+    #paginaVerificacao .form-container {
+        padding: 20px;
+    }
+    
+    .lista-verificacao li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .lista-verificacao .status-verificacao {
+        align-self: flex-end;
+    }
+    
+    .resultado-verificacao {
+        padding: 20px;
+    }
+    
+    .codigo-verificacao {
+        font-size: 20px;
+    }
+    
+    .statusDesc-verificacao {
+        font-size: 16px;
+    }
 }
 
-.status-verificacao-container.carregando {
-    background-color: #dbeafe;
-    color: #1e40af;
+/* Animações */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.status-verificacao-container.erro {
-    background-color: #fee2e2;
-    color: #dc2626;
+.resultado-verificacao,
+.lista-verificacao li {
+    animation: fadeIn 0.3s ease-out;
 }
 
-.status-verificacao-container.sucesso {
-    background-color: #d1fae5;
-    color: #065f46;
+/* Estados de foco para acessibilidade */
+#paginaVerificacao .btn:focus,
+#paginaVerificacao .form-group input:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
 }
