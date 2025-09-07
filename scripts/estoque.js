@@ -19,6 +19,9 @@ class EstoqueManager {
         this.inicializarElementos();
         this.inicializarEventos();
         this.carregarUltimaPesquisa();
+        
+        // Iniciar autenticação imediatamente
+        this.loginIderis();
     }
 
     inicializarElementos() {
@@ -102,9 +105,14 @@ class EstoqueManager {
     }
 
     async loginIderis() {
-        if (!this.statusEstoque) return;
+        if (!this.statusEstoque) {
+            console.error('Elemento statusEstoque não encontrado');
+            return;
+        }
         
+        console.log('Iniciando autenticação Ideris...');
         this.setStatusEstoque('Autenticando no Hub Ideris...', 'carregando');
+        
         try {
             const resp = await fetch(this.AUTH_URL_IDERIS, {
                 method: 'POST',
@@ -116,31 +124,52 @@ class EstoqueManager {
                 body: `"${this.PRIVATE_KEY_IDERIS}"`
             });
 
+            console.log('Resposta da autenticação:', resp.status, resp.statusText);
+
             const raw = await resp.text();
-            if (!resp.ok) throw new Error(`Falha na autenticação: ${resp.status} - ${raw}`);
+            console.log('Resposta bruta:', raw.substring(0, 100) + '...');
+
+            if (!resp.ok) {
+                throw new Error(`Falha na autenticação: ${resp.status} - ${raw}`);
+            }
 
             let token = null;
             try {
                 const parsed = JSON.parse(raw);
                 token = typeof parsed === 'string' ? parsed : (parsed.token || parsed.jwt);
-            } catch {
+                console.log('Token extraído do JSON:', token ? '✅' : '❌');
+            } catch (parseError) {
+                console.log('Falha no parse JSON, tentando como texto simples...');
                 const cleaned = raw.trim().replace(/^"|"$/g, '');
                 if (/^[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/.test(cleaned)) {
                     token = cleaned;
+                    console.log('Token extraído como texto simples:', token ? '✅' : '❌');
                 }
             }
 
-            if (!token) throw new Error('Token JWT não encontrado na resposta.');
+            if (!token) {
+                throw new Error('Token JWT não encontrado na resposta. Resposta: ' + raw.substring(0, 100));
+            }
 
             this.jwtTokenIderis = token;
             this.scheduleRenewIderis();
             this.setStatusEstoque('Autenticado com sucesso! Pronto para consultar SKUs.', 'sucesso');
             
-            if (this.btnBuscar) this.btnBuscar.disabled = false;
+            if (this.btnBuscar) {
+                this.btnBuscar.disabled = false;
+                console.log('Botão buscar habilitado');
+            }
+
+            console.log('Autenticação realizada com sucesso');
 
         } catch (err) {
+            console.error('Erro na autenticação:', err);
             this.setStatusEstoque('Erro: ' + err.message, 'erro');
-            console.error(err);
+            
+            // Tentar novamente após 5 segundos em caso de erro
+            setTimeout(() => {
+                this.loginIderis();
+            }, 5000);
         }
     }
 
@@ -165,6 +194,11 @@ class EstoqueManager {
         
         const tbody = this.skuTable.querySelector('tbody');
         tbody.innerHTML = '';
+
+        if (items.length === 0) {
+            this.setStatusEstoque('Nenhum SKU encontrado.', 'erro');
+            return;
+        }
 
         // Ordenar por SKU
         items.sort((a, b) => String(a.sku).localeCompare(String(b.sku), undefined, { numeric: true, sensitivity: 'base' }));
@@ -191,7 +225,7 @@ class EstoqueManager {
         if (!this.skuTable) return;
         
         this.skuTable.querySelector('tbody').innerHTML = '';
-        this.setStatusEstoque('Lista limpa.');
+        this.setStatusEstoque('Lista limpa.', 'sucesso');
     }
 
     async buscarSKUs() {
@@ -224,15 +258,23 @@ class EstoqueManager {
                 }
             });
 
+            console.log('Resposta da consulta SKUs:', resp.status);
+
             const raw = await resp.text();
             let list = [];
 
             try {
                 const parsed = JSON.parse(raw);
-                if (parsed && Array.isArray(parsed.obj)) list = parsed.obj;
-                else this.setStatusEstoque('Resposta inválida ou sem dados.', 'erro');
-            } catch {
-                this.setStatusEstoque('Resposta inválida.', 'erro');
+                if (parsed && Array.isArray(parsed.obj)) {
+                    list = parsed.obj;
+                    console.log(`${list.length} SKUs encontrados`);
+                } else {
+                    this.setStatusEstoque('Resposta inválida ou sem dados.', 'erro');
+                    console.log('Resposta inválida:', raw);
+                }
+            } catch (parseError) {
+                this.setStatusEstoque('Resposta inválida do servidor.', 'erro');
+                console.error('Erro no parse:', parseError, 'Resposta:', raw);
             }
 
             this.renderRows(list);
@@ -243,9 +285,10 @@ class EstoqueManager {
                 this.lastSearch.textContent = `Última pesquisa: ${rawInput}`;
             }
 
-            this.setStatusEstoque(resp.ok ? 'Consulta concluída.' : `Falha na consulta (${resp.status}).`, resp.ok ? 'sucesso' : 'erro');
+            this.setStatusEstoque(resp.ok ? `Consulta concluída. ${list.length} SKU(s) encontrados.` : `Falha na consulta (${resp.status}).`, resp.ok ? 'sucesso' : 'erro');
 
         } catch (err) {
+            console.error('Erro na consulta SKUs:', err);
             this.setStatusEstoque('Erro: ' + err.message, 'erro');
         }
     }
@@ -295,14 +338,15 @@ class EstoqueManager {
                     }
                     if (input) input.value = '';
                 } else {
-                    console.error(`Falha ao atualizar ${sku}: ${resp.status}`);
+                    const errorText = await resp.text();
+                    console.error(`Falha ao atualizar ${sku}: ${resp.status} - ${errorText}`);
                 }
             } catch (err) {
                 console.error(`Erro ao atualizar ${sku}:`, err);
             }
         }
 
-        this.setStatusEstoque(`${okCount} SKU(s) atualizados com sucesso.`, 'sucesso');
+        this.setStatusEstoque(`${okCount} SKU(s) atualizados com sucesso.`, okCount > 0 ? 'sucesso' : 'erro');
     }
 
     voltarDashboard() {
@@ -318,8 +362,19 @@ class EstoqueManager {
     }
 }
 
-// Inicializar quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM carregado, inicializando estoque...');
+// Inicializar quando a página de estoque for carregada
+function inicializarEstoque() {
+    console.log('Inicializando módulo de estoque...');
     window.estoqueApp = new EstoqueManager();
+}
+
+// Inicializar automaticamente se a página de estoque estiver visível
+document.addEventListener('DOMContentLoaded', function() {
+    const paginaEstoque = document.getElementById('paginaEstoque');
+    if (paginaEstoque && !paginaEstoque.classList.contains('hidden')) {
+        inicializarEstoque();
+    }
 });
+
+// Exportar função para inicialização manual
+window.inicializarEstoque = inicializarEstoque;
